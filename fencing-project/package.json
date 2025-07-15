@@ -1,9 +1,10 @@
 {
   "main": "electron/main.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "vite build",
     "start": "electron .",
-    "dev:all": "concurrently -k \"npm run dev\" \"cross-env NODE_ENV=development npm run start\""
+    "lint": "eslint . --ext .js,.jsx"
   },
   "build": {
     "appId": "com.fencing.tournament",
@@ -28,9 +29,12 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.0",
     "cross-env": "^7.0.3",
     "electron": "^37.2.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.1",
     "vite": "^7.0.4"
   }
 }
