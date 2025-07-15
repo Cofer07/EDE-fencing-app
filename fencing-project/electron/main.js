@@ -8,17 +8,23 @@ const db = new Database(path.join(__dirname, '../fencing.db'));
 let win;
 
 function createWindow() {
-  if (win) return; // Prevent multiple windows
+  if (win) return;
 
   win = new BrowserWindow({
-    width: 1000,
-    height: 700,
+    show: false, // Wait until ready
+    width: 1200,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
 
-  win.loadURL('http://localhost:5173'); // Assumes Vite dev server is running
+  win.loadURL('http://localhost:5173');
+
+  win.once('ready-to-show', () => {
+    win.maximize(); // Maximizes the window but keeps standard window chrome
+    win.show();
+  });
 
   win.on('closed', () => {
     win = null;
@@ -28,16 +34,14 @@ function createWindow() {
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-  // On macOS, it's common for apps to stay open until the user quits explicitly
   if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('activate', () => {
-  // On macOS, re-create a window when dock icon is clicked and no other windows open
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-// IPC handler to receive fencer data from renderer
+// IPC handler
 ipcMain.handle('import-fencers', async (_event, fencers) => {
   try {
     const stmt = db.prepare('INSERT INTO fencers (name, club, weapon) VALUES (?, ?, ?)');
