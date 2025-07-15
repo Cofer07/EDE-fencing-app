@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import Papa from 'papaparse';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [csvData, setCsvData] = useState([]);
+
+  const handleFile = (e) => {
+    Papa.parse(e.target.files[0], {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        setCsvData(results.data);
+      },
+    });
+  };
+
+  const handleImport = async () => {
+    const result = await window.api.importFencers(csvData);
+    if (result.success) {
+      alert("Fencers imported!");
+    } else {
+      alert("Error: " + result.error);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="p-6">
+      <input type="file" accept=".csv" onChange={handleFile} />
+      <button onClick={handleImport} className="ml-2 bg-blue-500 text-white px-4 py-1 rounded">Import Fencers</button>
+    </div>
+  );
 }
-
-export default App

@@ -1,35 +1,36 @@
-console.log("🟢 Electron process started");
+const { app, BrowserWindow, ipcMain } = require('electron');
+const path = require('path');
+const Database = require('better-sqlite3');
 
-const { app, BrowserWindow } = require('electron');
+const db = new Database(path.join(__dirname, '../fencing.db'));
 
 function createWindow() {
-  console.log("🟢 Creating window...");
-
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 700,
+    webPreferences: {
+      preload: path.join(__dirname, '../preload.js'),
+    },
   });
 
-  win.loadURL('https://example.com')
-    .then(() => {
-      console.log("🟢 Page loaded");
-    })
-    .catch((err) => {
-      console.error("❌ Failed to load URL:", err);
-    });
-
-  win.on('ready-to-show', () => {
-    console.log("🟢 Window ready to show");
-    win.show();
-    win.focus();
-  });
+  win.loadURL('http://localhost:5173'); // if using Vite
 }
 
-app.whenReady().then(() => {
-  console.log("🟢 App is ready");
-  createWindow();
-});
+app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+// Receive fencers from frontend and insert
+ipcMain.handle('import-fencers', async (_event, fencers) => {
+  const stmt = db.prepare('INSERT INTO fencers (name, club, weapon) VALUES (?, ?, ?)');
+  const insertMany = db.transaction((rows) => {
+    for (const row of rows) {
+      stmt.run(row.name, row.club, row.weapon);
+    }
+  });
+
+  try {
+    insertMany(fencers);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
