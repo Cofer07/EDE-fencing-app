@@ -9,19 +9,35 @@ export default function App() {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
+        console.log("CSV headers:", Object.keys(results.data[0]));
+        console.log("Parsed data:", results.data);
         setCsvData(results.data);
       },
     });
   };
 
+
   const handleImport = async () => {
-    const result = await window.api.importFencers(csvData);
-    if (result.success) {
-      alert("Fencers imported!");
-    } else {
-      alert("Error: " + result.error);
-    }
-  };
+  const validFencers = csvData.filter((row) =>
+    row.name?.trim() && row.weapon?.trim()
+  );
+
+  if (validFencers.length === 0) {
+    alert("No valid rows to import.");
+    return;
+  }
+
+  console.log("Importing:", validFencers);
+
+  const result = await window.api.importFencers(validFencers);
+
+  if (result.success) {
+    alert("Fencers imported!");
+  } else {
+    alert("Error: " + result.error);
+  }
+};
+
 
   return (
     <div className="p-6">

@@ -1,9 +1,9 @@
 {
   "main": "electron/main.js",
   "scripts": {
-  "dev": "vite",
-  "start": "electron .",
-  "dev:all": "concurrently -k \"vite\" \"cross-env NODE_ENV=development electron .\""
+    "dev": "vite",
+    "start": "electron .",
+    "dev:all": "concurrently -k \"npm run dev\" \"cross-env NODE_ENV=development npm run start\""
   },
   "build": {
     "appId": "com.fencing.tournament",
@@ -22,10 +22,15 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
-    "papaparse": "^5.5.3"
+    "papaparse": "^5.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.6.0",
     "concurrently": "^9.2.0",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "electron": "^37.2.1",
+    "vite": "^7.0.4"
   }
 }
