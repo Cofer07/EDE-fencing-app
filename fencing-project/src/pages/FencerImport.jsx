@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import '../index.css';
 
 export default function FencerImport() {
   const [csvData, setCsvData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [mapping, setMapping] = useState({ name: '', club: '', weapon: '' });
+  const navigate = useNavigate();
 
   const handleFile = (e) => {
     Papa.parse(e.target.files[0], {
@@ -44,20 +46,16 @@ export default function FencerImport() {
       }))
     );
 
-    if (result.success) toast.success('Fencers successfully imported!');
-    else toast.error('Error: Fencers not imported.');
+    if (result.success) {
+      toast.success('Fencers successfully imported!');
+      navigate('/validate-fencers'); // ✅ Redirect after success
+    } else {
+      toast.error('Error: Fencers not imported.');
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#111622] text-white font-sans flex flex-col">
-      <header className="flex items-center justify-between border-b border-[#242e47] px-10 py-3">
-        <div className="flex items-center gap-3">
-          <img src="/src/assets/PointControl-notext.png" className="w-12 h-12" alt="Logo" />
-          <h2 className="text-lg font-bold">Tournament Manager</h2>
-        </div>
-        <div className="text-sm">Fencer Import</div>
-      </header>
-
       <main className="flex-1 p-10 w-full max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Import Fencer Data</h1>
         <p className="text-[#93a1c8] mb-6 text-sm">Upload a file or manually enter fencer info</p>
@@ -73,7 +71,37 @@ export default function FencerImport() {
         </div>
 
         {columns.length > 0 && (
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-6 items-start">
+            {/* Preview */}
+            <div>
+              <h3 className="text-md font-bold mb-2">Preview</h3>
+              <div className="text-sm bg-[#1a2132] rounded p-4 max-h-64 overflow-y-auto">
+                <table className="table-auto w-full text-left text-xs">
+                  <thead>
+                    <tr>
+                      {columns.map((col) => (
+                        <th key={col} className="px-2 py-1 border-b border-[#344165]">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {csvData.slice(0, 5).map((row, idx) => (
+                      <tr key={idx} className="border-t border-[#2b364d]">
+                        {columns.map((col) => (
+                          <td key={col} className="px-2 py-1">
+                            {row[col] || ''}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mapping */}
             <div>
               <h3 className="text-md font-bold mb-2">Data Mapping</h3>
               <div className="flex flex-col gap-4">
@@ -122,34 +150,6 @@ export default function FencerImport() {
                     ))}
                   </select>
                 </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-md font-bold mb-2">Preview</h3>
-              <div className="text-sm bg-[#1a2132] rounded p-4 max-h-64 overflow-y-auto">
-                <table className="table-auto w-full text-left text-xs">
-                  <thead>
-                    <tr>
-                      {columns.map((col) => (
-                        <th key={col} className="px-2 py-1 border-b border-[#344165]">
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {csvData.slice(0, 5).map((row, idx) => (
-                      <tr key={idx} className="border-t border-[#2b364d]">
-                        {columns.map((col) => (
-                          <td key={col} className="px-2 py-1">
-                            {row[col] || ''}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
