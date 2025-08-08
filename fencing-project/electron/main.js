@@ -4,6 +4,7 @@ const path = require('path');
 const { initDb } = require('./db');
 require('./ipc-fencers');
 require('./ipc-import');
+require('./ipc-settings');
 
 async function createWindow() {
   const win = new BrowserWindow({

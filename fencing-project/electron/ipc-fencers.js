@@ -22,3 +22,31 @@ ipcMain.handle('fencers:updateValidity', (_e, { ids = [], isValid = true } = {})
   tx(ids);
   return { updated: ids.length, value: v };
 });
+
+ipcMain.handle('fencers:clear', () => {
+  const del = db.prepare(`DELETE FROM fencers`);
+  const info = del.run();
+  return { success: true, deleted: info.changes };
+});
+
+ipcMain.handle('fencers:stats', () => {
+  const row = db.prepare(`
+    SELECT
+      COUNT(*) AS count,
+      SUM(CASE WHEN is_valid=1 THEN 1 ELSE 0 END) AS valid_count
+    FROM fencers
+  `).get();
+
+  const count = row?.count || 0;
+  const validCount = row?.valid_count || 0;
+  return {
+    count,
+    validCount,
+    hasRoster: count > 0,
+    // for now, validationComplete == hasRoster (we can refine later)
+    validationComplete: count > 0,
+    // placeholders for future stages; PR2/PR3 will update these
+    swissComplete: false,
+    divisionsComplete: false,
+  };
+});

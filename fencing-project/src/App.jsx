@@ -1,55 +1,51 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+
+// Pages
 import FencerImport from './pages/FencerImport.jsx';
 import ValidateFencers from './pages/ValidateFencers.jsx';
 
-function Header() {
-  const location = useLocation();
-  const navigate = useNavigate();
+// Shared UI
+import TimelineProcess from './components/TimelineProcess.jsx';
 
-  const subtitle =
-    location.pathname === '/validate-fencers' ? 'Validate Fencers' : 'Fencer Import';
-
-  const go = () => {
-    if (location.pathname === '/validate-fencers') navigate('/');
-    else navigate('/validate-fencers');
-  };
-
-  return (
-    <header className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-      <div className="flex items-center gap-3">
-        <img
-          src="/src/assets/PointControl-notext.png"
-          alt="PointControl Logo"
-          className="w-12 h-12 object-contain"
-        />
-        <h1 className="text-xl font-bold">Point Control</h1>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="text-sm text-gray-300">{subtitle}</div>
-        <button
-          onClick={go}
-          className="rounded-md border border-gray-600 px-3 py-1.5 text-sm hover:bg-gray-800"
-        >
-          {location.pathname === '/validate-fencers' ? 'Go to Import' : 'Go to Validation'}
-        </button>
-      </div>
-    </header>
-  );
+// Temporary placeholders (we’ll replace these in PR2/PR3)
+function Swiss() {
+  return <div className="p-6 text-gray-200">Swiss rounds UI coming next…</div>;
+}
+function Divisions() {
+  return <div className="p-6 text-gray-200">Divisions UI coming next…</div>;
+}
+function Results() {
+  return <div className="p-6 text-gray-200">Results UI coming next…</div>;
 }
 
 export default function App() {
   return (
     <Router>
       <div className="min-h-screen w-full flex flex-col bg-[#0b1120] text-white">
-        <Header />
+        {/* Brand bar (simple, no right-side tab) */}
+        <header className="flex items-center gap-3 px-6 py-4 border-b border-gray-700">
+          <img
+            src="/src/assets/PointControl-notext.png"
+            alt="Point Control Logo"
+            className="w-10 h-10 object-contain"
+          />
+          <h1 className="text-xl font-bold">Point Control</h1>
+        </header>
 
-        <main className="flex-grow flex items-center justify-center p-6">
-          <div className="w-full max-w-6xl">
+        {/* Timeline / stepper */}
+        <TimelineProcess />
+
+        {/* Main content */}
+        <main className="flex-grow p-6">
+          <div className="w-full max-w-6xl mx-auto">
             <Routes>
               <Route path="/" element={<FencerImport />} />
               <Route path="/validate-fencers" element={<ValidateFencers />} />
+              <Route path="/swiss" element={<Swiss />} />
+              <Route path="/divisions" element={<Divisions />} />
+              <Route path="/results" element={<Results />} />
             </Routes>
           </div>
         </main>
