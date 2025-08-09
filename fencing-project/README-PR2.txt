@@ -1,0 +1,1 @@
+PR2 - Swiss System (Drop-in)\n\nIncludes: migrations, IPC, preload bridges, main require, Swiss page.\nInstall: unzip into project root, add <Route path=\"/swiss\" element={<Swiss/>}/> in src/App.jsx, restart dev.\nNotes: Standings order = Wins -> TD -> Buchholz -> SB; byes are 1W/+5 TD; pairings avoid rematches when possible.

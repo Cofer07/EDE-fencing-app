@@ -5,14 +5,12 @@ import { Toaster } from 'react-hot-toast';
 // Pages
 import FencerImport from './pages/FencerImport.jsx';
 import ValidateFencers from './pages/ValidateFencers.jsx';
+import Swiss from './pages/Swiss.jsx';
 
 // Shared UI
 import TimelineProcess from './components/TimelineProcess.jsx';
 
 // Temporary placeholders (we’ll replace these in PR2/PR3)
-function Swiss() {
-  return <div className="p-6 text-gray-200">Swiss rounds UI coming next…</div>;
-}
 function Divisions() {
   return <div className="p-6 text-gray-200">Divisions UI coming next…</div>;
 }

@@ -1,10 +1,22 @@
+// electron/main.js
 'use strict';
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { initDb } = require('./db');
-require('./ipc-fencers');
-require('./ipc-import');
-require('./ipc-settings');
+
+// define the helper
+function safeRequire(label, mod) {
+  try { require(mod); console.log(`[main] loaded ${label}`); }
+  catch (e) { console.error(`[main] FAILED loading ${label}:`, e); throw e; }
+}
+
+// use it (note the capitalization matches)
+safeRequire('ipc-fencers', './ipc-fencers');
+safeRequire('ipc-import', './ipc-import');
+safeRequire('ipc-settings', './ipc-settings');
+safeRequire('ipc-swiss', './ipc-swiss');
+
+// ...the rest of your file unchanged
 
 async function createWindow() {
   const win = new BrowserWindow({
@@ -20,9 +32,9 @@ async function createWindow() {
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
   if (devUrl) {
-    await win.loadURL(devUrl);
+    await win.loadURL(devUrl);            // ✅ loadURL for dev
   } else {
-    await win.loadFile(path.join(process.cwd(), 'dist', 'index.html'));
+    await win.loadFile(path.join(process.cwd(), 'dist', 'index.html')); // ✅ loadFile for prod
   }
 }
 
