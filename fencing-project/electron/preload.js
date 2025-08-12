@@ -25,4 +25,11 @@ contextBridge.exposeInMainWorld('api', {
   swissReset: () => ipcRenderer.invoke('swiss:reset'),
   fullReset: () => ipcRenderer.invoke('app:fullReset'),
   swissDebugCounts: () => ipcRenderer.invoke('swiss:debugCounts'),
+
+  // Divisions
+  divisionsCreate: () => ipcRenderer.invoke('divisions:create'),
+  divisionsList: () => ipcRenderer.invoke('divisions:list'),
+  divisionState: (divisionId) => ipcRenderer.invoke('division:state', { divisionId }),
+  divisionReport: (matchId, aScore, bScore) => ipcRenderer.invoke('division:report', { matchId, aScore, bScore }),
+  divisionsDebug: () => ipcRenderer.invoke('divisions:debug'),
 });

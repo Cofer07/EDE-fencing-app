@@ -15,6 +15,8 @@ safeRequire('ipc-fencers', './ipc-fencers');
 safeRequire('ipc-import', './ipc-import');
 safeRequire('ipc-settings', './ipc-settings');
 safeRequire('ipc-swiss', './ipc-swiss');
+require('./ipc-divisions');
+
 
 // ...the rest of your file unchanged
 

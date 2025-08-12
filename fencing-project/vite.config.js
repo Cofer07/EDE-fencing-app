@@ -7,4 +7,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  optimizeDeps: {
+    include: [
+      '@g-loot/react-tournament-brackets',
+      'react-svg-pan-zoom',
+      'styled-components'
+    ],
+  },
 });

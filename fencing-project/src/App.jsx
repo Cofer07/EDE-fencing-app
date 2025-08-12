@@ -6,14 +6,13 @@ import { Toaster } from 'react-hot-toast';
 import FencerImport from './pages/FencerImport.jsx';
 import ValidateFencers from './pages/ValidateFencers.jsx';
 import Swiss from './pages/Swiss.jsx';
+import Divisions from './pages/Divisions.jsx';
+import DivisionBracket from './pages/DivisionBracket.jsx';
 
 // Shared UI
 import TimelineProcess from './components/TimelineProcess.jsx';
 
 // Temporary placeholders (we’ll replace these in PR2/PR3)
-function Divisions() {
-  return <div className="p-6 text-gray-200">Divisions UI coming next…</div>;
-}
 function Results() {
   return <div className="p-6 text-gray-200">Results UI coming next…</div>;
 }
@@ -44,6 +43,8 @@ export default function App() {
               <Route path="/swiss" element={<Swiss />} />
               <Route path="/divisions" element={<Divisions />} />
               <Route path="/results" element={<Results />} />
+              <Route path="/divisions" element={<Divisions/>} />
+              <Route path="/divisions/:id" element={<DivisionBracket/>} />
             </Routes>
           </div>
         </main>

@@ -1,0 +1,5 @@
+// Divisions
+divisionsCreate: () => ipcRenderer.invoke('divisions:create'),
+divisionsList: () => ipcRenderer.invoke('divisions:list'),
+divisionState: (divisionId) => ipcRenderer.invoke('division:state', { divisionId }),
+divisionReport: (matchId, aScore, bScore) => ipcRenderer.invoke('division:report', { matchId, aScore, bScore }),
