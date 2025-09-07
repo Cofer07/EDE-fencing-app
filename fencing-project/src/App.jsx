@@ -20,32 +20,26 @@ function Results() {
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen w-full flex flex-col bg-[#0b1120] text-white">
-        {/* Brand bar (simple, no right-side tab) */}
-        <header className="flex items-center gap-3 px-6 py-4 border-b border-gray-700">
-          <img
-            src="/src/assets/PointControl-notext.png"
-            alt="Point Control Logo"
-            className="w-10 h-10 object-contain"
-          />
-          <h1 className="text-xl font-bold">Point Control</h1>
+      <div className="min-h-screen bg-[#0f1220] text-gray-100">
+        <header className="sticky top-0 z-10 bg-[#0f1220]">
+          <TimelineProcess />
         </header>
 
-        {/* Timeline / stepper */}
-        <TimelineProcess />
-
-        {/* Main content */}
-        <main className="flex-grow p-6">
-          <div className="w-full max-w-6xl mx-auto">
+        <main className="mx-auto max-w-[1400px] p-6">
+          <div className="space-y-4">
             <Routes>
-              <Route path="/" element={<FencerImport />} />
-              <Route path="/validate-fencers" element={<ValidateFencers />} />
+              <Route path="/" element={<Divisions />} />
+              <Route path="/import" element={<FencerImport />} />
+              <Route path="/validate" element={<ValidateFencers />} />
               <Route path="/swiss" element={<Swiss />} />
               <Route path="/divisions" element={<Divisions />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/divisions" element={<Divisions/>} />
-              <Route path="/divisions/:id" element={<DivisionBracket/>} />
+              <Route path="/divisions/:id" element={<DivisionBracket />} />
+              {/* Keep Results if you still need it */}
+              {/* <Route path="/results" element={<Results />} /> */}
             </Routes>
+
+            {/* any global loading state */}
+            {/* {loading && <div className="text-sm opacity-70">Loading…</div>} */}
           </div>
         </main>
 
@@ -54,3 +48,4 @@ export default function App() {
     </Router>
   );
 }
+
