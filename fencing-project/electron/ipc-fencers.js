@@ -1,5 +1,5 @@
 'use strict';
-const { ipcMain } = require('electron');
+const { ipcMain, BrowserWindow } = require('electron');
 const { db } = require('./db');
 
 // list
@@ -23,12 +23,14 @@ ipcMain.handle('fencers:updateValidity', (_e, { ids = [], isValid = 1 } = {}) =>
   const stmt = db.prepare(`UPDATE fencers SET is_valid=? WHERE id=?`);
   const tx = db.transaction((arr) => { for (const id of arr) stmt.run(isValid ? 1 : 0, id); });
   tx(ids);
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
   return { success:true, count: ids.length };
 });
 
 // clear roster
 ipcMain.handle('fencers:clear', () => {
   const info = db.prepare(`DELETE FROM fencers`).run();
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
   return { success:true, deleted: info.changes };
 });
 
@@ -51,6 +53,18 @@ ipcMain.handle('fencers:stats', () => {
     swissComplete = (lastRound >= t.total_rounds) && (unfinished === 0);
   }
 
+  let divisionsHaveResults = false;
+  try {
+    const divRow = db.prepare(`
+      SELECT
+        SUM(CASE WHEN a_score IS NOT NULL OR b_score IS NOT NULL THEN 1 ELSE 0 END) AS scored_matches
+      FROM de_matches
+    `).get();
+    divisionsHaveResults = (divRow?.scored_matches || 0) > 0;
+  } catch (_) {
+    divisionsHaveResults = false;
+  }
+
   return {
     count,
     validCount,
@@ -58,7 +72,7 @@ ipcMain.handle('fencers:stats', () => {
     validationComplete: count > 0, // basic for now
     swissStarted,
     swissComplete,
-    divisionsComplete: false,
+    divisionsComplete: divisionsHaveResults,
   };
 });
 
@@ -84,6 +98,7 @@ ipcMain.handle('app:fullReset', () => {
     }
     try { db.prepare(`VACUUM`).run(); } catch (_) {}
 
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
     return { success:true };
   } catch (e) {
     console.error('app:fullReset failed', e);
