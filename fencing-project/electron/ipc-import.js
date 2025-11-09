@@ -1,5 +1,5 @@
 'use strict';
-const { ipcMain } = require('electron');
+const { ipcMain, BrowserWindow } = require('electron');
 const { db } = require('./db');
 
 ipcMain.handle('fencers:import', (_e, { fencers = [] } = {}) => {
@@ -26,6 +26,7 @@ ipcMain.handle('fencers:import', (_e, { fencers = [] } = {}) => {
 
   try {
     tx(fencers);
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
     return { success: true, inserted, ignored, total: fencers.length };
   } catch (err) {
     console.error('Import failed:', err);

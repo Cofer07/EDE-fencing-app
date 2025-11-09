@@ -1,5 +1,5 @@
 'use strict';
-const { ipcMain } = require('electron');
+const { ipcMain, BrowserWindow } = require('electron');
 const { db } = require('./db');
 
 console.log('[main] loaded ipc-divisions');
@@ -216,6 +216,7 @@ ipcMain.handle('divisions:create', () => {
   });
 
   const created = tx();
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
   return { success:true, created };
 });
 
@@ -274,6 +275,61 @@ ipcMain.handle('division:report', (_e, { matchId, aScore, bScore }) => {
 
   if (finished) advanceFromRow(row, a, b);
 
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
   return { success:true };
 });
 
+/** ------- Medalists (Gold, Silver, two Bronzes) per division ------- */
+ipcMain.handle('divisions:medalists', () => {
+  // For each division, compute top 4 using F and SFs.
+  const divisions = db.prepare(`SELECT id, name FROM divisions ORDER BY id`).all();
+  const medalists = [];
+
+  const getMatch = db.prepare(`
+    SELECT m.*, fa.name AS a_name, fa.club AS a_club, fb.name AS b_name, fb.club AS b_club
+    FROM de_matches m
+    LEFT JOIN fencers fa ON fa.id = m.a_fencer_id
+    LEFT JOIN fencers fb ON fb.id = m.b_fencer_id
+    WHERE m.division_id=? AND m.round_label=?
+    ORDER BY m.bracket_slot
+  `);
+
+  for (const d of divisions) {
+    const finals = getMatch.all(d.id, 'F');
+    const sfs = getMatch.all(d.id, 'SF');
+    if (finals.length === 0 || sfs.length < 2) continue;
+
+    const F = finals[0];
+    // Determine Gold/Silver from Final (fallback to nulls if unfinished)
+    let gold = null, silver = null;
+    if (F.a_fencer_id && F.b_fencer_id && (F.finished || (F.a_score != null && F.b_score != null))) {
+      const aWins = (F.a_score ?? 0) > (F.b_score ?? 0);
+      const winId = aWins ? F.a_fencer_id : F.b_fencer_id;
+      const winName = aWins ? F.a_name : F.b_name;
+      const winClub = aWins ? (F.a_club || '') : (F.b_club || '');
+      const loseId = aWins ? F.b_fencer_id : F.a_fencer_id;
+      const loseName = aWins ? F.b_name : F.a_name;
+      const loseClub = aWins ? (F.b_club || '') : (F.a_club || '');
+      gold = { division_id: d.id, division_name: d.name, place: 1, medal: 'Gold', fencer_id: winId, name: winName, club: winClub };
+      silver = { division_id: d.id, division_name: d.name, place: 2, medal: 'Silver', fencer_id: loseId, name: loseName, club: loseClub };
+    }
+
+    // Two bronzes: semifinals losers
+    const bronzeEntries = [];
+    for (const sf of sfs) {
+      if (!sf.a_fencer_id || !sf.b_fencer_id || (sf.a_score == null && sf.b_score == null)) continue;
+      const aWins = (sf.a_score ?? 0) > (sf.b_score ?? 0);
+      const loserId = aWins ? sf.b_fencer_id : sf.a_fencer_id;
+      const loserName = aWins ? sf.b_name : sf.a_name;
+      const loserClub = aWins ? (sf.b_club || '') : (sf.a_club || '');
+      bronzeEntries.push({ division_id: d.id, division_name: d.name, place: 3, medal: 'Bronze', fencer_id: loserId, name: loserName, club: loserClub });
+    }
+
+    if (gold) medalists.push(gold);
+    if (silver) medalists.push(silver);
+    // If only one SF reported, still push that bronze
+    for (const b of bronzeEntries) medalists.push(b);
+  }
+
+  return { success: true, medalists };
+});

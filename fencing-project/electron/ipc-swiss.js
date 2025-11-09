@@ -1,5 +1,5 @@
 'use strict';
-const { ipcMain } = require('electron');
+const { ipcMain, BrowserWindow } = require('electron');
 const { db } = require('./db');
 
 /* ---------- helpers ---------- */
@@ -176,6 +176,7 @@ ipcMain.handle('swiss:start', (_e, { totalRounds = 4 } = {}) => {
   const tournamentId = tx(totalRounds);
   const s = getTournamentState(tournamentId);
   s.standings = computeStandings(tournamentId);
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
   return s;
 });
 
@@ -201,6 +202,7 @@ ipcMain.handle('swiss:report', (_e, { matchId, scoreA, scoreB }) => {
 
   const t = db.prepare(`SELECT id FROM swiss_tournaments ORDER BY id DESC LIMIT 1`).get();
   const standings = t ? computeStandings(t.id) : [];
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
   return { success: true, finished, standings };
 });
 
@@ -241,6 +243,7 @@ ipcMain.handle('swiss:nextRound', () => {
 
   const s = getTournamentState(t.id);
   s.standings = computeStandings(t.id);
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
   return { success: true, ...s };
 });
 
@@ -268,6 +271,7 @@ ipcMain.handle('swiss:reset', () => {
     // vacuum outside txn
     try { db.prepare(`VACUUM`).run(); } catch (_) {}
 
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:progress-updated'));
     return { success: true };
   } catch (e) {
     console.error('swiss:reset failed', e);

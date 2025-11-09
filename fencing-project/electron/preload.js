@@ -32,4 +32,17 @@ contextBridge.exposeInMainWorld('api', {
   divisionState: (divisionId) => ipcRenderer.invoke('division:state', { divisionId }),
   divisionReport: (matchId, aScore, bScore) => ipcRenderer.invoke('division:report', { matchId, aScore, bScore }),
   divisionsDebug: () => ipcRenderer.invoke('divisions:debug'),
+  divisionsMedalists: () => ipcRenderer.invoke('divisions:medalists'),
+
+  // projector / auxiliary windows
+  openStandingsWindow: () => ipcRenderer.invoke('app:openStandings', { route: '/swiss-projector' }),
+
+  // events
+  onProgressUpdated: (cb) => {
+    const handler = () => {
+      try { cb && cb(); } catch (_) {}
+    };
+    ipcRenderer.on('app:progress-updated', handler);
+    return () => ipcRenderer.removeListener('app:progress-updated', handler);
+  },
 });

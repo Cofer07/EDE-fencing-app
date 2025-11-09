@@ -43,6 +43,23 @@ async function createWindow() {
 app.whenReady().then(() => {
   initDb();
   ipcMain.handle('app:ping', () => 'pong');
+  ipcMain.handle('app:openStandings', async (_e, { route }) => {
+    const win = new BrowserWindow({
+      width: 1280,
+      height: 800,
+      backgroundColor: '#0f1220',
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    });
+    const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
+    const hash = (route && typeof route === 'string') ? route : '/swiss-projector';
+    if (devUrl) await win.loadURL(`${devUrl}#${hash}`);
+    else await win.loadFile(path.join(process.cwd(), 'dist', 'index.html'), { hash });
+    return { ok: true };
+  });
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

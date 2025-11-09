@@ -45,6 +45,7 @@ export default function Swiss() {
   const [state, setState] = useState({ tournament: null, rounds: [], matches: [], standings: [] });
   const [roundsWanted, setRoundsWanted] = useState(4);
   const [loading, setLoading] = useState(true);
+  const [visibleRound, setVisibleRound] = useState(null);
 
   const currentRound = useMemo(
     () => state.rounds?.[state.rounds.length - 1]?.round_number ?? 0,
@@ -81,7 +82,6 @@ export default function Swiss() {
     if (!confirm('Reset Swiss (keeps roster)?')) return;
     const r = await window.api.swissReset();
     if (!r?.success) return alert(r?.error || 'Reset failed');
-    // Force clear immediately so UI snaps to start state
     blank();
     setRoundsWanted(4);
     await load();
@@ -111,6 +111,24 @@ export default function Swiss() {
     for (const arr of map.values()) arr.sort((x, y) => x.id - y.id);
     return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
   }, [state.matches]);
+
+  // ensure visibleRound is set to a valid round
+  useEffect(() => {
+    const list = matchesByRound.map(([rn]) => rn);
+    if (!list.length) { setVisibleRound(null); return; }
+    if (visibleRound == null || !list.includes(visibleRound)) {
+      setVisibleRound(list[list.length - 1]);
+    }
+  }, [matchesByRound]);
+
+  const roundsList = matchesByRound.map(([rn]) => rn);
+  const idx = roundsList.indexOf(visibleRound);
+  const canPrev = idx > 0;
+  const canNext = idx >= 0 && idx < roundsList.length - 1;
+  const currentMatches = useMemo(() => {
+    const found = matchesByRound.find(([rn]) => rn === visibleRound);
+    return found ? found[1] : [];
+  }, [matchesByRound, visibleRound]);
 
   return (
     <div className="min-h-screen bg-[#0f1220] text-gray-100 p-6">
@@ -150,24 +168,47 @@ export default function Swiss() {
           )}
         </div>
 
-        {/* Matches by round */}
-        {matchesByRound.map(([rn, arr]) => (
-          <div key={rn} className="rounded-lg border border-[#232846] overflow-hidden">
-            <div className="bg-[#171b2d] px-4 py-2 font-semibold">
-              Round {rn} {rn === currentRound ? '(current)' : ''}
+        {/* Single round table + navigation */}
+        <div className="rounded-lg border border-[#232846] overflow-hidden">
+          <div className="bg-[#171b2d] px-4 py-2 font-semibold flex items-center justify-between">
+            <div>Round {visibleRound ?? '-'} {visibleRound === currentRound ? '(current)' : ''}</div>
+            <div className="flex items-center gap-2">
+              <button
+                className={`px-3 py-1 rounded-md border ${canPrev ? 'border-[#2a3557] bg-[#1b2236] hover:bg-[#222b45]' : 'border-[#1b2342] bg-[#0f1424] opacity-50'}`}
+                disabled={!canPrev}
+                onClick={() => canPrev && setVisibleRound(roundsList[idx - 1])}
+              >Prev</button>
+              <select
+                className="bg-[#0f1424] border border-[#2a3557] rounded px-2 py-1"
+                value={visibleRound ?? ''}
+                onChange={(e) => setVisibleRound(Number(e.target.value))}
+              >
+                {roundsList.map(rn => <option key={rn} value={rn}>Round {rn}</option>)}
+              </select>
+              <button
+                className={`px-3 py-1 rounded-md border ${canNext ? 'border-[#2a3557] bg-[#1b2236] hover:bg-[#222b45]' : 'border-[#1b2342] bg-[#0f1424] opacity-50'}`}
+                disabled={!canNext}
+                onClick={() => canNext && setVisibleRound(roundsList[idx + 1])}
+              >Next</button>
+              <button
+                className="ml-4 px-3 py-1 rounded-md border border-[#2a3557] bg-indigo-600/80 hover:bg-indigo-600"
+                onClick={() => window.api.openStandingsWindow?.()}
+                title="Open projector standings window"
+              >Open Projector</button>
             </div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="p-3 text-left">Match</th>
-                  <th className="p-3 text-left">Fencer A</th>
-                  <th className="p-3 text-left">Fencer B</th>
-                  <th className="p-3 text-left">Score (to 5)</th>
-                  <th className="p-3 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {arr.map((m, i) => {
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr>
+                <th className="p-3 text-left">Match</th>
+                <th className="p-3 text-left">Fencer A</th>
+                <th className="p-3 text-left">Fencer B</th>
+                <th className="p-3 text-left">Score (to 5)</th>
+                <th className="p-3 text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentMatches.map((m, i) => {
                   const nameA = m.name_a || `#${m.fencer_a_id}`;
                   const nameB = m.fencer_b_id ? (m.name_b || `#${m.fencer_b_id}`) : null;
                   const aWins = (m.score_a ?? 0) > (m.score_b ?? 0);
@@ -190,7 +231,7 @@ export default function Swiss() {
                               <span className={aWins ? 'text-emerald-400 font-semibold' : bWins ? 'text-rose-400 font-semibold' : 'text-gray-300'}>
                                 {m.score_a ?? 0}
                               </span>
-                              <span className="opacity-70 px-1">–</span>
+                              <span className="opacity-70 px-1">-</span>
                               <span className={bWins ? 'text-emerald-400 font-semibold' : aWins ? 'text-rose-400 font-semibold' : 'text-gray-300'}>
                                 {m.score_b ?? 0}
                               </span>
@@ -209,12 +250,11 @@ export default function Swiss() {
                     </tr>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        ))}
+            </tbody>
+          </table>
+        </div>
 
-        {/* Standings (Wins → TS → TR → TD±) */}
+        {/* Standings (W · TS · TR · TD) */}
         {state.standings?.length > 0 && (
           <div className="rounded-lg border border-[#232846] overflow-hidden">
             <div className="bg-[#171b2d] px-4 py-2 font-semibold">Standings</div>
@@ -226,7 +266,7 @@ export default function Swiss() {
                   <th className="p-3 text-left">W</th>
                   <th className="p-3 text-left">TS</th>
                   <th className="p-3 text-left">TR</th>
-                  <th className="p-3 text-left">TD ±</th>
+                  <th className="p-3 text-left">TD</th>
                 </tr>
               </thead>
               <tbody>
@@ -247,8 +287,21 @@ export default function Swiss() {
           </div>
         )}
 
-        {loading && <div className="text-sm opacity-70">Loading…</div>}
+        {loading && <div className="text-sm opacity-70">Loading...</div>}
       </div>
+
+      {/* Floating next-round control */}
+      {state.tournament && (
+        <div className="fixed right-6 bottom-6 flex items-center gap-2">
+          <button
+            onClick={nextRound}
+            className="rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3"
+            title="Generate Next Round"
+          >
+            Next Round
+          </button>
+        </div>
+      )}
     </div>
   );
 }

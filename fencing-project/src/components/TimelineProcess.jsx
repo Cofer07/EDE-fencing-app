@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const steps = [
-  { key: 'import',   label: 'Import Fencer',   path: '/' },
-  { key: 'validate', label: 'Validate Fencer', path: '/validate-fencers' },
+  { key: 'import',   label: 'Import Fencers',   path: '/import' },
+  { key: 'validate', label: 'Validate Fencers', path: '/validate-fencers' },
   { key: 'swiss',    label: 'Swiss Rounds',    path: '/swiss' },
   { key: 'divs',     label: 'Divisions',       path: '/divisions' },
   { key: 'results',  label: 'Results',         path: '/results' },
@@ -40,13 +40,26 @@ export default function TimelineProcess() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  // Live refresh when backend emits progress updates
+  useEffect(() => {
+    if (!window.api?.onProgressUpdated) return;
+    const off = window.api.onProgressUpdated(async () => {
+      try {
+        const s = await window.api.fencerStats();
+        setProgress({
+          hasRoster: !!s.hasRoster,
+          validationComplete: !!s.validationComplete,
+          swissComplete: !!s.swissComplete,
+          divisionsComplete: !!s.divisionsComplete,
+        });
+      } catch {}
+    });
+    return () => { try { off && off(); } catch {} };
+  }, []);
+
   const activeIndex = Math.max(
     0,
-    steps.findIndex(s =>
-      s.path === '/'
-        ? location.pathname === '/'
-        : location.pathname.startsWith(s.path)
-    )
+    steps.findIndex(s => location.pathname.startsWith(s.path))
   );
 
   // Gate future steps based on progress

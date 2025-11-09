@@ -121,8 +121,8 @@ export default function FencerImport() {
       <main className="flex-1 p-10 w-full max-w-5xl mx-auto">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Import Fencer Data</h1>
-            <p className="text-[#93a1c8] mb-6 text-sm">Upload a file or manually enter fencer info</p>
+            <h1 className="text-3xl font-bold mb-1">Import Fencers</h1>
+            <p className="text-[#93a1c8] mb-6 text-sm">Upload a CSV or paste fencer info</p>
           </div>
           {existing.length > 0 && (
             <button
